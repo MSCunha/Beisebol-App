@@ -15,10 +15,10 @@ export default function StatsCard({ profile }: { profile: any }) {
       const slug = profile.full_name.toLowerCase().replace(/\s+/g, "");
       const bgUrl = supabase.storage
         .from("cards")
-        .getPublicUrl(`${slug}_bg.png`).data.publicUrl;
+        .getPublicUrl(`${slug}_bg.webp`).data.publicUrl;
       const frontUrl = supabase.storage
         .from("cards")
-        .getPublicUrl(`${slug}_front.png`).data.publicUrl;
+        .getPublicUrl(`${slug}_front.webp`).data.publicUrl;
       setImages({ bg: bgUrl, front: frontUrl });
     }
   }, [profile]);
