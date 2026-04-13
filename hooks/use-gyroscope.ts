@@ -52,7 +52,7 @@ export function useGyroscope() {
     if (!isEnabled || permissionStatus !== "granted") return;
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      const x = e.beta ? (e.beta - 45) / 45 : 0;
+      const x = e.beta ? -(e.beta - 45) / 45 : 0;
       const y = e.gamma ? e.gamma / 45 : 0;
       setCoords({ x, y });
     };
