@@ -17,8 +17,17 @@ export default function AdminModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-200 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-lg shadow-2xl overflow-hidden flex animate-in zoom-in-95 duration-300 border-4 border-white">
+    /* BACKDROP*/
+    <div 
+      className="fixed inset-0 z-200 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300"
+      onClick={onClose} // Fecha ao clicar no fundo escuro
+    >
+      
+      {/* MODAL */}
+      <div 
+        className="bg-white w-full max-w-6xl h-[90vh] rounded-lg shadow-2xl overflow-hidden flex animate-in zoom-in-95 duration-300 border-4 border-white"
+        onClick={(e) => e.stopPropagation()} // Impede que o clique aqui dentro chegue no Backdrop
+      >
         
         {/* SIDEBAR DO MODAL */}
         <nav className="w-72 bg-slate-50 border-r border-slate-100 p-8 flex flex-col gap-2">
@@ -59,7 +68,7 @@ export default function AdminModal({
             icon={<path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 1 1 0-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 0 1-1.44-4.282m3.102.069a18.03 18.03 0 0 1-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 0 1 8.835 2.535M10.34 6.66a23.847 23.847 0 0 0 8.835-2.535m0 0A23.74 23.74 0 0 0 18.795 3m.38 1.125a23.91 23.91 0 0 1 1.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 0 0 1.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 0 1 0 3.46" />}
           />
 
-          <button onClick={onClose} className="mt-auto text-slate-800 font-black italic uppercase text-[10px] p-5 hover:text-red-600 transition-all cursor-pointer">
+          <button onClick={onClose} className="mt-auto text-slate-800 font-black italic uppercase text-[10px] p-5 hover:text-red-600 transition-all cursor-pointer text-left">
             Sair do Painel
           </button>
         </nav>
@@ -75,6 +84,8 @@ export default function AdminModal({
     </div>
   );
 }
+
+// --- VIEWS ---
 
 function RequestsView() {
   const [items, setItems] = useState<any[]>([]);
@@ -138,8 +149,6 @@ function AthletesView() {
 
   const save = async (e: any) => {
     e.preventDefault();
-    
-    //Atualiza Tabela profiles
     const { error: profileError } = await supabase!
       .from("profiles")
       .update({
@@ -151,7 +160,6 @@ function AthletesView() {
       })
       .eq("id", selected.id);
 
-    // Prepara e Atualiza Tabela player_stats
     const statsPayload = {
       athlete_id: selected.id,
       frequencia: selected.player_stats?.frequencia || 0,
@@ -177,10 +185,9 @@ function AthletesView() {
     const { error: statsError } = await supabase!.from("player_stats").upsert(upsertPayload);
 
     if (profileError || statsError) {
-      console.error("Erro ao salvar:", profileError || statsError);
       alert("Erro ao salvar os dados.");
     } else {
-      alert(`Cadastro de ${selected.full_name} atualizado com sucesso!`);
+      alert(`Cadastro de ${selected.full_name} atualizado!`);
       setSelected(null);
       load();
     }
@@ -203,14 +210,14 @@ function AthletesView() {
           </header>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {athletes.map((a) => (
-              <div key={a.id} className="bg-slate-100 p-6 rounded-lg flex justify-between items-center group hover:bg-[#5dc0fd]/20 hover:shadow-xl transition-all">
+              <div key={a.id} className="bg-slate-100 p-6 rounded-lg flex justify-between items-center group hover:bg-[#5dc0fd]/20 transition-all">
                 <div>
                   <span className="text-[#5dc0fd] font-black italic mr-2 text-xl">#{a.jersey_number}</span>
                   <span className="font-black uppercase text-slate-700 text-sm">{a.full_name}</span>
                   <p className="text-[10px] font-bold text-slate-400 uppercase">{a.position || "Sem Posição"}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setSelected(a)} className="bg-slate-600 text-white px-4 py-3 rounded-lg hover:bg-[#5dc0fd] transition-colors font-bold uppercase text-[10px]">Editar Perfil</button>
+                  <button onClick={() => setSelected(a)} className="bg-slate-600 text-white px-4 py-3 rounded-lg hover:bg-[#5dc0fd] transition-colors font-bold uppercase text-[10px]">Editar</button>
                   <button onClick={() => deletePlayer(a.id)} className="bg-slate-200 text-slate-400 p-3 rounded-lg hover:bg-red-500 hover:text-white transition-all">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
                   </button>
@@ -231,60 +238,27 @@ function AthletesView() {
             </button>
           </div>
 
-          {/* DADOS DO PERFIL */}
           <div className="mb-10 pb-10 border-b-2 border-slate-200">
             <h5 className="text-xs font-black uppercase text-slate-400 mb-6 italic underline decoration-[#5dc0fd] decoration-4">Dados de Registro</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <InputItem label="Nome Completo" val={selected.full_name} set={(v) => setSelected({...selected, full_name: v})} />
+              <InputItem label="Nome na Camisa" val={selected.jersey_name || ""} set={(v) => setSelected({...selected, jersey_name: v})} />
               <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Nome Completo</label>
-                <input type="text" className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd]" value={selected.full_name} onChange={(e) => setSelected({...selected, full_name: e.target.value})} />
-              </div>
-
-              {/* CAMPO JERSEY NAME */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Nome na Camisa (Jersey Name)</label>
-                <input type="text" placeholder="Ex: MATHEUS" className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd] uppercase" value={selected.jersey_name || ""} onChange={(e) => setSelected({...selected, jersey_name: e.target.value})} />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Número da Camisa</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Número</label>
                 <input type="number" className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd]" value={selected.jersey_number} onChange={(e) => setSelected({...selected, jersey_number: e.target.value})} />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Posição Principal</label>
-                <select className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd] uppercase italic" value={selected.position} onChange={(e) => setSelected({...selected, position: e.target.value})}>
-                  <option value="P">Pitcher (P)</option>
-                  <option value="C">Catcher (C)</option>
-                  <option value="1B">1st Base (1B)</option>
-                  <option value="2B">2nd Base (2B)</option>
-                  <option value="3B">3rd Base (3B)</option>
-                  <option value="SS">Shortstop (SS)</option>
-                  <option value="LF">Left Field (LF)</option>
-                  <option value="CF">Center Field (CF)</option>
-                  <option value="RF">Right Field (RF)</option>
-                  <option value="DH">Designated Hitter (DH)</option>
-                </select>
-              </div>
-
-              {/* CAMPO POSIÇÕES DE PREFERÊNCIA */}
-              <div className="flex flex-col gap-1 lg:col-span-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Posições de Preferência (Secundárias)</label>
-                <input type="text" placeholder="Ex: SS, 2B, CF" className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd] uppercase" value={selected.preferred_positions || ""} onChange={(e) => setSelected({...selected, preferred_positions: e.target.value})} />
               </div>
             </div>
           </div>
 
-          {/* ATRIBUTOS TÉCNICOS */}
           <div className="mb-10">
             <h5 className="text-xs font-black uppercase text-slate-400 mb-6 italic underline decoration-[#5dc0fd] decoration-4">Performance e Stats</h5>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {["frequencia", "agilidade", "flexibilidade", "forca", "resistencia", "velocidade", "arremesso", "defesa", "visao", "precisao", "rebatida", "contato"].map((attr) => (
+              {Object.keys(selected.player_stats).filter(k => k !== 'id' && k !== 'athlete_id' && k !== 'notas_tecnicas' && k !== 'historico_texto' && k !== 'created_at').map((attr) => (
                 <div key={attr} className="flex flex-col gap-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase ml-1">{attr}</label>
                   <input
                     type="number" min="0" max="100"
-                    className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd] transition-colors"
+                    className="bg-white border-2 border-slate-200 rounded-xl p-3 font-black text-slate-700 outline-none focus:border-[#5dc0fd]"
                     value={selected.player_stats?.[attr] || 0}
                     onChange={(e) => setSelected({ ...selected, player_stats: { ...selected.player_stats, [attr]: parseInt(e.target.value) || 0 } })}
                   />
@@ -293,13 +267,12 @@ function AthletesView() {
             </div>
           </div>
 
-          {/* FEEDBACKS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <textarea className="bg-white border-2 border-slate-200 rounded-3xl p-6 text-xs font-bold h-40 outline-none focus:border-[#5dc0fd]" placeholder="Histórico de Evolução..." value={selected.player_stats?.historico_texto || ""} onChange={(e) => setSelected({ ...selected, player_stats: { ...selected.player_stats, historico_texto: e.target.value } })} />
             <textarea className="bg-white border-2 border-slate-200 rounded-3xl p-6 text-xs font-bold h-40 outline-none focus:border-[#5dc0fd]" placeholder="Notas do Coach..." value={selected.player_stats?.notas_tecnicas || ""} onChange={(e) => setSelected({ ...selected, player_stats: { ...selected.player_stats, notas_tecnicas: e.target.value } })} />
           </div>
 
-          <button type="submit" className="w-full md:w-1/2 bg-[#5dc0fd] text-white font-black italic uppercase p-5 rounded-3xl shadow-xl hover:scale-[1.01] transition-all">Salvar Alterações Completas</button>
+          <button type="submit" className="w-full md:w-1/2 bg-[#5dc0fd] text-white font-black italic uppercase p-5 rounded-3xl shadow-xl hover:scale-[1.01] transition-all">Salvar Alterações</button>
         </form>
       )}
     </div>
@@ -318,15 +291,14 @@ function TutorialsView() {
   return (
     <div className="animate-in fade-in duration-500">
       <header className="mb-8 border-b-4 border-slate-800 pb-4"><h3 className="text-2xl font-black italic uppercase text-slate-800">Novo Conteúdo Técnico</h3></header>
-      <form onSubmit={save} className="bg-slate-50 p-8 rounded-3xl flex flex-col gap-6 text-gray-900">
+      <form onSubmit={save} className="bg-slate-50 p-8 rounded-3xl flex flex-col gap-6">
         <InputItem label="Título do Guia" val={form.title} set={(v) => setForm({ ...form, title: v })} />
         <select className="bg-white border-2 border-slate-200 p-4 rounded-xl font-black text-slate-600 italic outline-none focus:border-[#5dc0fd]" onChange={(e) => setForm({ ...form, type: e.target.value })} value={form.type}>
-          <option value="video">Vídeo (YouTube Embed)</option>
-          <option value="pdf">Manual PDF (URL Bucket)</option>
-          <option value="article">Artigo Link</option>
+          <option value="video">Vídeo (YouTube)</option>
+          <option value="pdf">Manual PDF</option>
         </select>
-        <textarea className="bg-white border-2 border-slate-200 p-4 rounded-xl text-xs h-24 outline-none focus:border-[#5dc0fd]" placeholder="Link ou Código Iframe..." value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
-        <button type="submit" className="bg-slate-800 text-white font-black uppercase italic p-5 rounded-3xl hover:bg-black transition-all">Publicar Guia</button>
+        <textarea className="bg-white border-2 border-slate-200 p-4 rounded-xl text-xs h-24 outline-none focus:border-[#5dc0fd]" placeholder="Link..." value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
+        <button type="submit" className="bg-slate-800 text-white font-black uppercase italic p-5 rounded-3xl hover:bg-black transition-all">Publicar</button>
       </form>
     </div>
   );
@@ -343,8 +315,10 @@ function NewsView() {
 
   const save = async (e: any) => {
     e.preventDefault();
-    const { error } = await supabase!.from("news").insert([form]);
-    if (!error) { alert("📢 Notícia enviada!"); setForm({ title: "", description: "", content: "", image_url: "" }); loadNews(); }
+    await supabase!.from("news").insert([form]);
+    alert("📢 Notícia enviada!");
+    setForm({ title: "", description: "", content: "", image_url: "" });
+    loadNews();
   };
 
   const deleteNews = async (id: string) => {
@@ -352,13 +326,13 @@ function NewsView() {
   };
 
   return (
-    <div className="animate-in fade-in duration-500 space-y-12 text-gray-900">
+    <div className="animate-in fade-in duration-500 space-y-12">
       <section>
         <header className="mb-6 border-b-4 border-slate-800 pb-2"><h3 className="text-2xl font-black italic uppercase text-slate-800">Nova Publicação</h3></header>
-        <form onSubmit={save} className="bg-slate-50 p-8 rounded-lg flex flex-col gap-6 border border-slate-100 shadow-inner">
+        <form onSubmit={save} className="bg-slate-50 p-8 rounded-lg flex flex-col gap-6">
           <InputItem label="Manchete" val={form.title} set={(v) => setForm({ ...form, title: v })} />
           <textarea required className="bg-white border-2 border-slate-200 rounded-xl p-4 text-sm h-40 outline-none focus:border-[#5dc0fd]" placeholder="Conteúdo..." value={form.content} onChange={(e) => setForm({...form, content: e.target.value})} />
-          <button type="submit" className="bg-[#5dc0fd] text-white font-black uppercase italic p-5 rounded-2xl shadow-lg">Publicar Notícia</button>
+          <button type="submit" className="bg-[#5dc0fd] text-white font-black uppercase italic p-5 rounded-2xl shadow-lg">Publicar</button>
         </form>
       </section>
       <section>
@@ -366,7 +340,7 @@ function NewsView() {
           {newsList.map((n) => (
             <div key={n.id} className="bg-white border-2 border-slate-50 p-4 rounded-2xl flex justify-between items-center">
               <p className="font-black text-slate-700 uppercase italic text-sm">{n.title}</p>
-              <button onClick={() => deleteNews(n.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all">Excluir</button>
+              <button onClick={() => deleteNews(n.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all text-xs uppercase font-black">Excluir</button>
             </div>
           ))}
         </div>
@@ -376,7 +350,7 @@ function NewsView() {
 }
 
 
-// UI
+// --- UI COMPONENTS ---
 
 function TabBtn({ active, label, icon, onClick }: { active: boolean; label: string; icon: any; onClick: () => void }) {
   return (
@@ -389,7 +363,7 @@ function TabBtn({ active, label, icon, onClick }: { active: boolean; label: stri
 
 function InputItem({ label, val, set }: { label: string; val: string; set: (v: string) => void }) {
   return (
-    <div className="flex flex-col gap-1 w-full text-gray-900">
+    <div className="flex flex-col gap-1 w-full">
       <label className="text-[10px] font-black text-slate-400 uppercase ml-2">{label}</label>
       <input required value={val} onChange={(e) => set(e.target.value)} className="bg-white border-2 border-slate-200 rounded-xl p-4 font-black text-slate-700 outline-none focus:border-[#5dc0fd] transition-all" />
     </div>

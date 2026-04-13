@@ -16,10 +16,18 @@ export default function Sidebar({ isAdmin, onOpenAdmin }: SidebarProps) {
 
   return (
     <>
+
+    {isOpen && (
+        <div 
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-90 animate-in fade-in duration-300"
+        />
+      )}
+
       {/* CHEVRON */}
       {!isOpen && (
         <div
-          onMouseEnter={() => setIsOpen(true)}
+          onClick={() => setIsOpen(true)}
           className="fixed left-0 top-1/2 -translate-y-1/2 z-55 bg-white w-6 h-12 rounded-r-full shadow-lg flex items-center justify-center cursor-pointer border-y border-r border-slate-200"
         >
           <svg
@@ -126,12 +134,8 @@ export default function Sidebar({ isAdmin, onOpenAdmin }: SidebarProps) {
 
         {/* Sensor de Gyroscópio */}
         <div className="p-6 border-t border-slate-100 bg-slate-50 mt-auto">
-          <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest">
-            Experiência Imersiva
-          </p>
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[11px] font-bold text-slate-600 uppercase italic">Giroscópio</span>
               <span className="text-[9px] text-slate-400 font-bold uppercase">Inclinação Física</span>
             </div>
             <button 

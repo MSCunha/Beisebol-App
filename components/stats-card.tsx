@@ -1,17 +1,29 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { useSensor } from "@/context/SensorContext"; // Importando o contexto que criamos
+import { useSensor } from "@/context/SensorContext";
 
 export default function StatsCard({ profile }: { profile: any }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isFlipped, setIsFlipped] = useState(false);
-  const { coords, isEnabled } = useSensor(); // Consumindo o estado do giroscópio
+  const { coords, isEnabled } = useSensor(); // Consumindo o estado global do giroscópio
   const [images, setImages] = useState({
     front: null as string | null,
     bg: null as string | null,
   });
 
+  const [style, setStyle] = useState<any>({
+    "--mx": "50%",
+    "--my": "50%",
+    "--posx": "50%",
+    "--posy": "50%",
+    "--rx": 0,
+    "--ry": 0,
+    "--o": 1,
+    "--hyp": 0,
+  });
+
+  // Carregamento das Imagens
   useEffect(() => {
     if (profile?.full_name && supabase) {
       const slug = profile.full_name.toLowerCase().replace(/\s+/g, "");
@@ -25,9 +37,9 @@ export default function StatsCard({ profile }: { profile: any }) {
     }
   }, [profile]);
 
-  // Função centralizada de cálculo para ser usada por Mouse e Touch
+  // Função de Cálculo (Mantendo sua lógica original de 2.5 e p_from_center)
   const updateEffect = useCallback((clientX: number, clientY: number) => {
-    if (!cardRef.current || isEnabled) return; // Se o giroscópio estiver ligado, ele manda no estilo
+    if (!cardRef.current) return;
 
     const rect = cardRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
@@ -59,40 +71,47 @@ export default function StatsCard({ profile }: { profile: any }) {
     });
   }, [isEnabled]);
 
-  // Handlers para Mouse
-  const handleMouseMove = (e: React.MouseEvent) => {
-    updateEffect(e.clientX, e.clientY);
-  };
+  // Handler para Mouse
+  const handleMouseMove = (e: React.MouseEvent) => updateEffect(e.clientX, e.clientY);
 
-  // Handlers para Touch (Mobile)
+  // Handler para Mobile (Touch simula Mouse)
   const handleTouchMove = (e: React.TouchEvent) => {
-    // Usamos o primeiro toque detectado
     const touch = e.touches[0];
     updateEffect(touch.clientX, touch.clientY);
   };
 
-  // Efeito para o Giroscópio (Sensores)
+  // Efeito do Giroscópio (Movimento e Brilho físico)
   useEffect(() => {
     if (isEnabled) {
+      const rx = coords.x * 35; 
+      const ry = coords.y * 35;
+      const mx = 50 + (coords.y * 50); 
+      const my = 50 + (coords.x * 50);
+
       setStyle((s: any) => ({
         ...s,
-        "--rx": coords.x * 20, // Multiplicador para sensibilidade
-        "--ry": coords.y * 20,
+        "--rx": rx,
+        "--ry": ry,
+        "--mx": `${mx}%`,     
+        "--my": `${my}%`,     
+        "--posx": `${mx}%`,   
+        "--posy": `${my}%`,   
         "--o": 1,
+        "--hyp": Math.sqrt(Math.pow(coords.x, 2) + Math.pow(coords.y, 2)), 
       }));
     }
   }, [coords, isEnabled]);
 
-  const [style, setStyle] = useState<any>({
-    "--mx": "50%",
-    "--my": "50%",
-    "--posx": "50%",
-    "--posy": "50%",
-    "--rx": 0,
-    "--ry": 0,
-    "--o": 1,
-    "--hyp": 0,
-  });
+  const resetEffect = () => {
+    if (isEnabled) return;
+    setStyle((s: any) => ({
+      ...s,
+      "--rx": 0,
+      "--ry": 0,
+      "--o": 1,
+      "--pointer-from-center": 0,
+    }));
+  };
 
   const stats = Array.isArray(profile?.player_stats)
     ? profile.player_stats[0]
@@ -124,27 +143,11 @@ export default function StatsCard({ profile }: { profile: any }) {
   return (
     <div
       className={`perspective-midrange w-96 aspect-63/88 relative cursor-pointer ${isFlipped ? "is-flipped" : ""}`}
-      style={{ touchAction: 'none' }} // Crucial para mobile: impede o scroll da página ao mover o dedo na carta
+      style={{ touchAction: 'none' }} // Impede o scroll para permitir a inclinação com o dedo
       onMouseMove={handleMouseMove}
       onTouchMove={handleTouchMove}
-      onMouseLeave={() =>
-        setStyle((s: any) => ({
-          ...s,
-          "--rx": 0,
-          "--ry": 0,
-          "--o": 1,
-          "--pointer-from-center": 0,
-        }))
-      }
-      onTouchEnd={() =>
-        setStyle((s: any) => ({
-          ...s,
-          "--rx": 0,
-          "--ry": 0,
-          "--o": 1,
-          "--pointer-from-center": 0,
-        }))
-      }
+      onMouseLeave={resetEffect}
+      onTouchEnd={resetEffect}
       onClick={() => setIsFlipped(!isFlipped)}
       data-rarity="rare ultra"
       data-subtypes="supporter"
@@ -222,7 +225,7 @@ export default function StatsCard({ profile }: { profile: any }) {
           </div>
         </div>
 
-        {/* 2. BACK FACE */}
+        {/* 2. BACK FACE (VERSO) */}
         <div className="absolute inset-0 backface-hidden rounded-md overflow-hidden card__back bg-slate-900 border-none">
           <div className="card__grain z-50 pointer-events-none" />
           <div className="card__glare z-40" />
@@ -279,7 +282,6 @@ export default function StatsCard({ profile }: { profile: any }) {
   );
 }
 
-// Funções auxiliares StatItem e RadarChart permanecem iguais abaixo...
 function StatItem({ label, val }: { label: string; val: number }) {
   const percentage = Math.min(Math.max(val || 0, 0), 100);
   return (
