@@ -37,42 +37,46 @@ export default function StatsCard({ profile }: { profile: any }) {
     }
   }, [profile]);
 
-  // Função de Cálculo (Mantendo sua lógica original de 2.5 e p_from_center)
-  const updateEffect = useCallback((clientX: number, clientY: number) => {
-    if (!cardRef.current) return;
+  // Funcao de Calculo (Mantendo sua lógica original de 2.5 e p_from_center)
+  const updateEffect = useCallback(
+    (clientX: number, clientY: number) => {
+      if (!cardRef.current) return;
 
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+      const rect = cardRef.current.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
 
-    const px = Math.min(Math.max((x / rect.width) * 100, 0), 100);
-    const py = Math.min(Math.max((y / rect.height) * 100, 0), 100);
+      const px = Math.min(Math.max((x / rect.width) * 100, 0), 100);
+      const py = Math.min(Math.max((y / rect.height) * 100, 0), 100);
 
-    const rxVal = -((py - 50) / 2.5);
-    const ryVal = (px - 50) / 2.5;
+      const rxVal = -((py - 50) / 2.5);
+      const ryVal = (px - 50) / 2.5;
 
-    const p_from_left = px / 100;
-    const p_from_top = py / 100;
-    const p_from_center =
-      Math.sqrt(
-        Math.pow(p_from_left - 0.5, 2) + Math.pow(p_from_top - 0.5, 2),
-      ) * 2;
+      const p_from_left = px / 100;
+      const p_from_top = py / 100;
+      const p_from_center =
+        Math.sqrt(
+          Math.pow(p_from_left - 0.5, 2) + Math.pow(p_from_top - 0.5, 2),
+        ) * 2;
 
-    setStyle({
-      "--mx": `${px}%`,
-      "--my": `${py}%`,
-      "--posx": `${px}%`,
-      "--posy": `${py}%`,
-      "--pointer-from-center": p_from_center,
-      "--rx": rxVal,
-      "--ry": ryVal,
-      "--o": 1,
-      "--hyp": Math.sqrt(Math.pow(py - 50, 2) + Math.pow(px - 50, 2)) / 50,
-    });
-  }, [isEnabled]);
+      setStyle({
+        "--mx": `${px}%`,
+        "--my": `${py}%`,
+        "--posx": `${px}%`,
+        "--posy": `${py}%`,
+        "--pointer-from-center": p_from_center,
+        "--rx": rxVal,
+        "--ry": ryVal,
+        "--o": 1,
+        "--hyp": Math.sqrt(Math.pow(py - 50, 2) + Math.pow(px - 50, 2)) / 50,
+      });
+    },
+    [isEnabled],
+  );
 
   // Handler para Mouse
-  const handleMouseMove = (e: React.MouseEvent) => updateEffect(e.clientX, e.clientY);
+  const handleMouseMove = (e: React.MouseEvent) =>
+    updateEffect(e.clientX, e.clientY);
 
   // Handler para Mobile (Touch simula Mouse)
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -80,24 +84,36 @@ export default function StatsCard({ profile }: { profile: any }) {
     updateEffect(touch.clientX, touch.clientY);
   };
 
-  // Efeito do Giroscópio (Movimento e Brilho físico)
+  // Efeito do Giroscópio
   useEffect(() => {
     if (isEnabled) {
-      const rx = coords.x * 35; 
+      // Sensibilidade de rotacaoo
+      const rx = coords.x * 35;
       const ry = coords.y * 35;
-      const mx = 50 + (coords.y * 50); 
-      const my = 50 + (coords.x * 50);
+
+      // Mapeamento de posicao brilhos
+      const px = 50 + coords.y * 50;
+      const py = 50 + coords.x * 50;
+
+      //controle foil
+      const p_from_center = Math.min(
+        Math.sqrt(Math.pow(coords.x, 2) + Math.pow(coords.y, 2)) * 1.5,
+        1,
+      );
 
       setStyle((s: any) => ({
         ...s,
         "--rx": rx,
         "--ry": ry,
-        "--mx": `${mx}%`,     
-        "--my": `${my}%`,     
-        "--posx": `${mx}%`,   
-        "--posy": `${my}%`,   
+        "--mx": `${px}%`,
+        "--my": `${py}%`,
+        "--posx": `${px}%`,
+        "--posy": `${py}%`,
+        "--background-x": `${px}%`,
+        "--background-y": `${py}%`,
+        "--pointer-from-center": p_from_center,
         "--o": 1,
-        "--hyp": Math.sqrt(Math.pow(coords.x, 2) + Math.pow(coords.y, 2)), 
+        "--hyp": p_from_center,
       }));
     }
   }, [coords, isEnabled]);
@@ -143,7 +159,7 @@ export default function StatsCard({ profile }: { profile: any }) {
   return (
     <div
       className={`perspective-midrange w-96 aspect-63/88 relative cursor-pointer ${isFlipped ? "is-flipped" : ""}`}
-      style={{ touchAction: 'none' }} // Impede o scroll para permitir a inclinação com o dedo
+      style={{ touchAction: "none" }} // Impede o scroll para permitir a inclinacao com o dedo
       onMouseMove={handleMouseMove}
       onTouchMove={handleTouchMove}
       onMouseLeave={resetEffect}
@@ -164,8 +180,10 @@ export default function StatsCard({ profile }: { profile: any }) {
           <div className="card__glitter z-15" />
           <div className="card__foil z-45" />
 
+          {/* BORDA */}
           <div className="absolute inset-0 z-10 pointer-events-none bg-radial bg-radial-to-r/hsl from-indigo-500 from-25% to-teal-400 card-frame-style rounded-md overflow-hidden" />
 
+          {/* BACKGROUND */}
           <div className="absolute inset-5 z-20 rounded-t-md overflow-hidden bg-slate-900 h-6/8 ">
             {images.bg && (
               <img
@@ -178,6 +196,7 @@ export default function StatsCard({ profile }: { profile: any }) {
             <div className="card__foil-background" />
           </div>
 
+          {/* CUTOUT */}
           <div className="absolute inset-3 z-30 transform translate-z-5 pointer-events-none w-9/10 h-9/10">
             {images.front && (
               <img
@@ -188,6 +207,7 @@ export default function StatsCard({ profile }: { profile: any }) {
             )}
           </div>
 
+          {/* UI */}
           <div className="absolute inset-0 top-7 z-40 flex flex-col justify-between p-4 text-white pointer-events-none">
             <div className="flex justify-between items-start drop-shadow-xl">
               <div className="bg-linear-to-r from-gray-400 via-gray-100 to-gray-400 h-7 ml-1 mr-20 pl-10 text-black">
@@ -196,7 +216,9 @@ export default function StatsCard({ profile }: { profile: any }) {
                 </h2>
                 <p className="flex justify-between items-center bg-linear-to-r from-slate-900 from-40% to-slate-600 text-white border-b-2 border-gray-300 font-bold text-xl w-72 h-7 -ml-10 pl-10 pr-15 tracking-widest">
                   <span>#{profile?.jersey_number || "00"}</span>
-                  <span className="uppercase">{profile?.position_tag || "POS"}</span>
+                  <span className="uppercase">
+                    {profile?.position_tag || "POS"}
+                  </span>
                 </p>
               </div>
               <div className="w-20 h-20 z-50 bg-slate-900 rounded-full border-3 border-gray-300 absolute right-4 -top-3 flex items-center justify-center font-black text-4xl shadow-xl">
@@ -225,7 +247,7 @@ export default function StatsCard({ profile }: { profile: any }) {
           </div>
         </div>
 
-        {/* 2. BACK FACE (VERSO) */}
+        {/* BACK FACE (VERSO) */}
         <div className="absolute inset-0 backface-hidden rounded-md overflow-hidden card__back bg-slate-900 border-none">
           <div className="card__grain z-50 pointer-events-none" />
           <div className="card__glare z-40" />
@@ -236,17 +258,18 @@ export default function StatsCard({ profile }: { profile: any }) {
               alt="Logo São Luís Beisebol"
               className="w-full h-full object-contain opacity-80 filter drop-shadow-md brightness-110"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.style.display = "none";
               }}
             />
           </div>
-  
+
           <div className="absolute inset-0 z-10 pointer-events-none bg-radial from-indigo-500 from-25% to-teal-400 card-frame-style rounded-md overflow-hidden" />
           <div className="card__glitter z-15 opacity-20" />
 
           <div className="absolute inset-5 z-20 rounded-md overflow-hidden bg-repeat bg-linear-to-r from-gray-400 via-gray-100 to-gray-400 h-[92%] flex flex-col items-center p-2 text-slate-900 shadow-inner">
             <h3 className="text-center font-black italic uppercase tracking-tighter text-slate-800 text-sm self-center justify-center">
-              {profile?.jersey_name || "PLAYER"} • #{profile?.jersey_number || "00"}
+              {profile?.jersey_name || "PLAYER"} • #
+              {profile?.jersey_number || "00"}
             </h3>
             <div className="flex-1 w-full flex items-center justify-center p-1 mb-2 relative overflow-visible bg-transparent ">
               <div className="absolute inset-0 opacity-10 pointer-events-none" />
@@ -287,11 +310,13 @@ function StatItem({ label, val }: { label: string; val: number }) {
   return (
     <div className="flex flex-col w-full">
       <div className="flex justify-between items-end px-0.5">
-        <span className="opacity-70 text-md leading-none font-black">{label}</span>
+        <span className="opacity-70 text-md leading-none font-black">
+          {label}
+        </span>
         <span className="text-md leading-none font-black">{val || 0}</span>
       </div>
       <div className="h-2.5 w-full bg-black/25 rounded-full overflow-hidden border border-black/5 p-px mt-0.5">
-        <div 
+        <div
           className="h-full rounded-full transition-all duration-700 ease-out bg-linear-to-t from-indigo-500 via-indigo-200 to-indigo-500 shadow-[0_0_5px_rgba(255,255,255,0.2)]"
           style={{ width: `${percentage}%` }}
         />
@@ -300,7 +325,13 @@ function StatItem({ label, val }: { label: string; val: number }) {
   );
 }
 
-function RadarChart({ stats, size }: { stats: { label: string; value: number }[]; size: number }) {
+function RadarChart({
+  stats,
+  size,
+}: {
+  stats: { label: string; value: number }[];
+  size: number;
+}) {
   const centerX = size / 2;
   const centerY = size / 2;
   const radius = (size / 2) * 0.72;
@@ -314,11 +345,29 @@ function RadarChart({ stats, size }: { stats: { label: string; value: number }[]
     .join(" ");
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="overflow-visible"
+    >
       {[0.5, 1].map((m) => (
-        <circle key={m} cx={centerX} cy={centerY} r={radius * m} fill="none" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+        <circle
+          key={m}
+          cx={centerX}
+          cy={centerY}
+          r={radius * m}
+          fill="none"
+          stroke="rgba(0,0,0,0.15)"
+          strokeWidth="1"
+        />
       ))}
-      <polygon points={points} fill="rgba(6, 182, 212, 0.5)" stroke="#0891b2" strokeWidth="2" />
+      <polygon
+        points={points}
+        fill="rgba(6, 182, 212, 0.5)"
+        stroke="#0891b2"
+        strokeWidth="2"
+      />
       {stats.map((stat, i) => (
         <text
           key={i}
